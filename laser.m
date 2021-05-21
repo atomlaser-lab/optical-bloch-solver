@@ -65,11 +65,9 @@ classdef laser < handle
             %   L = L.SETPOLARIZATION(__,BASIS) uses BASIS (either 'linear'
             %   or 'spherical') to set the polarization.  If 'linear',
             %   assumes polarization is in [x,y,z] order
-            if nargin == 2
-                self.pol = pol(:);
+            if nargin == 2 || strcmpi(polBasis,'spherical')
+                self.pol = self.sphPolBasis'*pol(:);
             elseif strcmpi(polBasis,'linear')
-                self.pol = self.sphPolBasis*pol(:);
-            elseif strcmpi(polBasis,'spherical')
                 self.pol = pol(:);
             else
                 error('Polarization basis not supported!');

@@ -100,7 +100,8 @@ classdef densityMatrix < handle
             %   on the current axes.  Valid values for OPT are the same as
             %   for GETPOPULATIONS
             P = self.getPopulations(opt);
-            ax = axes;
+            ax = axes('box','on');
+            grid on;
             set(ax,'NextPlot','ReplaceChildren','LineStyleOrder',{'-','--','.-'})
             plot(ax,self.t,P,'linewidth',2);
             legend(ax,self.getPopLegend(opt));

@@ -13,6 +13,7 @@ classdef opticalSystem < densityMatrix
         laser2      %The secondary laser field, an instance of LASER
 
         B           %The magnetic field to use in G
+        Bdir        %The direction of the magnetic field as normalized [x,y,z] coordinates
     end
 
     methods
@@ -109,13 +110,51 @@ classdef opticalSystem < densityMatrix
             self.calcCoupling;
         end
         
-        function self = setMagneticField(self,B)
+        function self = setMagneticField(self,B,Bdir)
             %SETMAGNETICFIELD Sets the magnetic field
             %
             %   OP = OP.SETMAGNETICFIELD(B) sets the magnetic field to B in
-            %   Gauss and recalculates the bare and coupling Hamiltonians
+            %   Gauss and recalculates the bare and coupling Hamiltonians.
+            %   Assumes that B is along z
+            %
+            %   OP = OP.SETMAGNETICFIELD(B,BDIR) sets the magnetic field to
+            %   B in Gauss and along direction defined by the vector BDIR.
+            %   BDIR does not have to be normalized
             self.B = B;
+            if nargin > 2
+                self.Bdir = Bdir(:)./sqrt(Bdir(:)'*Bdir(:));
+            else
+                self.Bdir = [0;0;1];
+            end
             self.refresh;
+        end
+        
+        function U = getRotation(self,v)
+            %GETBROTATION Returns a rotation matrix that rotates vectors in
+            %the lab frame to be in the frame defined by either the
+            %magnetic field direction or the input direction
+            %
+            %   U = OP.GETROTATION() Returns matrix U that transforms
+            %   vectors from the lab frame to the frame parallel with the
+            %   magnetic field direction
+            %
+            %   U = OP.GETROTATION(V) Returns matrix U that transforms
+            %   vectors from the lab frame to the frame parallel with V
+            
+            if nargin < 2
+                v = self.Bdir;
+            end
+            a = [0;0;1];
+            b = v(:)./sqrt(v(:)'*v(:));
+            cp = cross(a,b);
+            if all(cp == 0)
+                U = eye(3);
+            else
+                c = a'*b;
+                vskew = [0 -cp(3) cp(2);cp(3) 0 -cp(1);-cp(2) cp(1) 0];
+                U = eye(3) + vskew + vskew^2./(1+c);
+            end
+            
         end
 
         function self = calcBareH(self,B)
@@ -127,8 +166,8 @@ classdef opticalSystem < densityMatrix
             %
             %   OP = OP.CALCBAREH(B) Uses the new magnetic field B in Gauss
             
-            if nargin==2
-                self.B=B;
+            if nargin == 2
+                self.B = B;
             end
             %
             % Diagonalize hyperfine Hamiltonians for the ground and excited
@@ -197,6 +236,17 @@ classdef opticalSystem < densityMatrix
             %
             omega = zeros(self.numStates);    %omega=d.E/hbar
             %
+            % Rotate polarizations into basis where B is along z, convert
+            % to spherical polarization
+            %
+            Upol = self.getRotation;
+            pol1 = Upol*self.laser1.pol;
+            pol1 = laser.sphPolBasis*pol1;
+            if ~isempty(self.laser2.pol)
+                pol2 = Upol*self.laser2.pol;
+                pol2 = laser.sphPolBasis*pol2;
+            end          
+            %
             % Loop over all ground and excited states
             %
             for g = 1:self.numGroundStates
@@ -211,7 +261,7 @@ classdef opticalSystem < densityMatrix
                             % secondary laser is not set or has empty
                             % intensity
                             %
-                            omega(g,eShift) = self.laser1.field*self.laser1.pol(q).*self.transition.dipole(g,eShift)/const.hbar;
+                            omega(g,eShift) = self.laser1.field*pol1(q).*self.transition.dipole(g,eShift)/const.hbar;
                         else
                             %
                             % This applies if we are considering a
@@ -221,9 +271,9 @@ classdef opticalSystem < densityMatrix
                             %
                             fStart = self.ground.BV3(g,1);
                             if fStart == self.laser1.ground(1)
-                                omega(g,eShift) = self.laser1.field*self.laser1.pol(q).*self.transition.dipole(g,eShift)/hbar;
+                                omega(g,eShift) = self.laser1.field*pol1(q).*self.transition.dipole(g,eShift)/hbar;
                             elseif fStart == self.laser2.ground(1)
-                                omega(g,eShift) = self.laser2.field*self.laser2.pol(q).*self.transition.dipole(g,eShift)/hbar;
+                                omega(g,eShift) = self.laser2.field*pol2(q).*self.transition.dipole(g,eShift)/hbar;
                             end
                         end
                     end
