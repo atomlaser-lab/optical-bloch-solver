@@ -7,8 +7,8 @@ dt = 10e-9;
 T = 100e-6;
 op = opticalSystem('Rb87','D2');
 th = pi*0;ph = 0;
-I = 1*16;
-B = 10;
+I = 16e-2;
+B = 10e-3;
 
 %% Pump from |1,-1> to F = 2 manifold
 op.laser1.setIntensity(I)...

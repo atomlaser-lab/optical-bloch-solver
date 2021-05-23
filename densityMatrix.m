@@ -197,7 +197,7 @@ classdef densityMatrix < handle
             self.density = reshape(self.densityVec,self.numStates,self.numStates);
         end
         
-        function M=makeM(self)
+        function M = makeM(self)
             %MAKEM Makes the matrix describing the master equation
             %
             %   M = D.MAKEM() Makes the matrix M describing the master

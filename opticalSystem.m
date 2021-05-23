@@ -271,9 +271,9 @@ classdef opticalSystem < densityMatrix
                             %
                             fStart = self.ground.BV3(g,1);
                             if fStart == self.laser1.ground(1)
-                                omega(g,eShift) = self.laser1.field*pol1(q).*self.transition.dipole(g,eShift)/hbar;
+                                omega(g,eShift) = self.laser1.field*pol1(q).*self.transition.dipole(g,eShift)/const.hbar;
                             elseif fStart == self.laser2.ground(1)
-                                omega(g,eShift) = self.laser2.field*pol2(q).*self.transition.dipole(g,eShift)/hbar;
+                                omega(g,eShift) = self.laser2.field*pol2(q).*self.transition.dipole(g,eShift)/const.hbar;
                             end
                         end
                     end
@@ -294,6 +294,83 @@ classdef opticalSystem < densityMatrix
             d = sum(self.decay,1);
             d = d((self.ground.numStates+1):end);
             R = bsxfun(@times,p,d(:));
+        end
+        
+        function P = getPolarization(self,basis,frame)
+            %GETPOLARIZATION Returns the total polarization of the sample
+            %normalized to 1 atom/m^3.  Multiply by the number density to
+            %get the total polarization suitable to the slowly-varying
+            %envelope equation of the OBEs
+            %
+            %   P = OP.GETPOLARIZATION() Returns the polarization of the
+            %   sample in a 3xN array where N is the number of density
+            %   matrices that have been solved for (size(OP.DENSITYVEC,2)).
+            %   P is the polarization in the lab frame in the spherical
+            %   basis
+            %
+            %   P = OP.GETPOLARIZATION(BASIS) returns the polarization in
+            %   the specified BASIS, which is either 'spherical' or
+            %   'linear'
+            %
+            %   P = OP.GETPOLARIZATION(__,FRAME) returns the polarization
+            %   in the specified FRAME, which is either 'lab' or 'field'
+            
+            %
+            % Parse inputs
+            %
+            if nargin < 2
+                basis = 'spherical';
+                frame = 'lab';
+            elseif nargin < 3
+                frame = 'lab';
+            end
+            %
+            % Get rotation from lab frame to magnetic field frame
+            %
+            Upol = self.getRotation;
+            %
+            % Preallocate variables, reshape density matrix
+            %
+            P = zeros(3,size(self.densityVec,2));
+            D = reshape(self.densityVec,[self.numStates,self.numStates,size(self.densityVec,2)]);
+            for nn = 1:size(D,3)
+                %
+                % Calculate individual dipole polarizations
+                %
+                tmp = self.transition.dipole.*D(:,:,nn);
+                %
+                % Calculate contributions to each polarization vector using
+                % a mask
+                %
+                for qq = 1:3
+                    mask = triu(self.transition.qMatrix == qq);
+                    tmp2 = mask.*tmp;
+                    P(qq,nn) = 1i*2*pi/(2*self.transition.wavelength*const.eps0)*sum(tmp2(:));
+                end
+                %
+                % Perform rotations to necessary bases or frames
+                %
+                if strcmpi(frame,'lab')
+                    if strcmpi(basis,'spherical')
+                        P(:,nn) = Upol'*P(:,nn);
+                    elseif strcmpi(basis,'linear')
+                        P(:,nn) = laser.sphPolBasis'*Upol'*P(:,nn);
+                    else
+                        error('Basis ''%s'' must be either ''spherical'' or ''linear''!',basis)
+                    end
+                elseif strcmpi(frame,'field')
+                    if strcmpi(basis,'spherical')
+                        P(:,nn) = P(:,nn);
+                    elseif strcmpi(basis,'linear')
+                        P(:,nn) = laser.sphPolBasis'*P(:,nn);
+                    else
+                        error('Basis ''%s'' must be either ''spherical'' or ''linear''!',basis)
+                    end
+                else
+                    error('Frame ''%s'' must be either ''lab'' or ''field''!',frame);
+                end
+            end
+
         end
     end
     
