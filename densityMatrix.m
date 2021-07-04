@@ -239,7 +239,7 @@ classdef densityMatrix < handle
             %   L = D.MAKETOTALLINDBLAD() Returns the total Lindblad term L
             L = zeros(self.numStates^2);
             for n = 1:self.numGroundStates
-                for m = (self.numGroundStates+1):self.numStates
+                for m = 1:self.numStates
                     L = L + self.makeLindblad(n,m);
                 end
             end

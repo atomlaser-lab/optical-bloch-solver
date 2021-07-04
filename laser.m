@@ -50,7 +50,7 @@ classdef laser < handle
             %   field assuming a Gaussian beam of total power P and beam
             %   waist W
             self.intensity = 2*P/(pi*w0^2);
-            self.field = self.calcFieldF(self.intensity);
+            self.field = self.calcField(self.intensity);
         end
         
         function self = setPolarization(self,pol,polBasis)
