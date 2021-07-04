@@ -7,12 +7,9 @@ classdef densityMatrix < handle
     
     properties
         numStates           %Total number of states
-        numGroundStates     %Total number of ground states
-        numExcitedStates    %Total number of excited states
         density             %The density matrix
         densityVec          %The vectorized density matrix (2D -> 1D)
-        initGroundPop       %The initial ground state population
-        initExcitedPop      %The initial excited state population
+        initPop             %The initial populations
         bare                %The bare Hamiltonian
         coupling            %The coupling Hamiltonian
         decay               %The decay Hamiltonian
@@ -24,35 +21,30 @@ classdef densityMatrix < handle
     end
     
     methods
-        function self = densityMatrix(numStates,numGroundStates)
+        function self = densityMatrix(numStates)
             %DENSITYMATRIX creates an instance of the class
             %
             %   D = DENSITYMATRIX creates a bare instance of the class
             %
-            %   D = DENSITYMATRIX(NUMSTATES,NUMGROUNDSTATES) creates an
+            %   D = DENSITYMATRIX(NUMSTATES) creates an
             %   instance of the class with total number of states NUMSTATES
-            %   and total number of ground states NUMGROUNDSTATES
-            if nargin == 2
-                self.setNumStates(numStates,numGroundStates);
+            if nargin == 1
+                self.setNumStates(numStates);
             end
         end
         
-        function self = setNumStates(self,numStates,numGroundStates)
+        function self = setNumStates(self,numStates)
             %SETNUMSTATES Sets the number of states and pre-allocates
             %arrays
             %
-            %   D = D.SETNUMSTATES(NUMSTATES,NUMGROUNDSTATES) uses the
-            %   total number of states NUMSTATES and ground states
-            %   NUMGROUNDSTATES to pre-allocate arrays
+            %   D = D.SETNUMSTATES(NUMSTATES) uses the total number 
+            %   of states NUMSTATES to pre-allocate arrays
             self.numStates = numStates;
-            self.numGroundStates = numGroundStates;
-            self.numExcitedStates = self.numStates-self.numGroundStates;
             self.density = zeros(self.numStates);
             self.bare = zeros(self.numStates);
             self.coupling = zeros(self.numStates);
             self.decay = zeros(self.numStates);
-            self.initGroundPop = zeros(self.numGroundStates,1);
-            self.initExcitedPop = zeros(self.numExcitedStates,1);
+            self.initPop = zeros(self.numStates,1);
         end
         
         function P = getPopFromVec(self)
@@ -69,24 +61,15 @@ classdef densityMatrix < handle
             %from the solved density matrix equations
             %
             %   P = D.GETPOPULATIONS(OPT) Uses OPT to get the populations.
-            %   OPT can be a vector of numbers that corresponds to
-            %   population labels. If can be a character vector that is
-            %   either 'ground', 'excited', or 'all'
-            if isnumeric(opt)
+            %   If OPT is not supplied, it returns all populations. If OPT is
+            %   numeric, it returns only those populations specified by the
+            %   index given in OPT
+            if nargin == 1 || isempty(opt)
+                P = self.getPopFromVec;
+            elseif isnumeric(opt)
                 pTemp = self.getPopFromVec;
                 P = pTemp(opt(:),:);
-            elseif all(ischar(opt))
-                pTemp = self.getPopFromVec;
-                if strcmpi(opt,'ground')
-                    P = pTemp(1:self.numGroundStates,:);
-                elseif strcmpi(opt,'excited')
-                    P = pTemp((self.numGroundStates+1):end,:);
-                elseif strcmpi(opt,'all')
-                    P = pTemp;
-                else
-                    error('Population option not supported!');
-                end
-            end   
+            end 
             P = real(P);
         end
         
@@ -99,13 +82,15 @@ classdef densityMatrix < handle
             %   D.plotPopulations(OPT) plots the populations given by OPT
             %   on the current axes.  Valid values for OPT are the same as
             %   for GETPOPULATIONS
+            if nargin == 1
+                opt = [];
+            end
             P = self.getPopulations(opt);
-%             ax = axes('box','on');
             ax = gca;
             grid on;
             set(ax,'NextPlot','ReplaceChildren','LineStyleOrder',{'-','--','.-'})
             plot(ax,self.t,P,'linewidth',2);
-            legend(ax,self.getPopLegend(opt));
+            legend(ax,self.getPopLegend(opt),'interpreter','tex');
             xlabel('Time [s]');
             ylabel('Population');
         end
@@ -122,23 +107,14 @@ classdef densityMatrix < handle
             %   OPT.  Valid values for OPT are the same as for
             %   GETPOPULATIONS
             %
-            
-            if isnumeric(opt)
+            if nargin == 1 || isempty(opt)
+                idx = 1:self.numStates;
+            elseif isnumeric(opt)
                 idx = opt;
-            elseif all(ischar(opt))
-                if strcmpi(opt,'ground')
-                    idx = 1:self.numGroundStates;
-                elseif strcmpi(opt,'excited')
-                    idx = (self.numGroundStates+1):self.numStates;
-                elseif strcmpi(opt,'all')
-                    idx = 1:self.numStates;
-                else
-                    error('Population option not supported!');
-                end
             end
             str = cell(length(idx),1);
             for nn = 1:length(idx)
-                str{nn} = sprintf('\rho_{%d%d}',idx(nn),idx(nn));
+                str{nn} = sprintf('\\rho_{%d%d}',idx(nn),idx(nn));
             end
         end
         
@@ -160,7 +136,7 @@ classdef densityMatrix < handle
             %
             M = self.makeM;
             self.densityVec = zeros(self.numStates^2,numSteps);
-            tmp = real([self.initGroundPop(:);self.initExcitedPop(:)]);
+            tmp = real(self.initPop);
             self.density = diag(tmp./sum(tmp));
             self.densityVec(:,1) = self.density(:);
             if any(isnan(self.densityVec(:,1)))
@@ -238,8 +214,8 @@ classdef densityMatrix < handle
             %
             %   L = D.MAKETOTALLINDBLAD() Returns the total Lindblad term L
             L = zeros(self.numStates^2);
-            for n = 1:self.numGroundStates
-                for m = 1:self.numStates
+            for n = 1:self.numStates
+                for m = n:self.numStates
                     L = L + self.makeLindblad(n,m);
                 end
             end
@@ -250,8 +226,8 @@ classdef densityMatrix < handle
             %MAKELINDBLAD Creates the Lindblad term for a pair of ground
             %and excited states
             %
-            %   L = D.MAKELINDBLAD(G,E) Creates the Lindblad term for the
-            %   ground state G and excited state E
+            %   L = D.MAKELINDBLAD(G,E) Creates the Lindblad term for decay
+            %   from state E to state G
             %
             L = zeros(self.numStates^2);
             for n = 1:self.numStates

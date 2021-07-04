@@ -14,8 +14,7 @@ op.laser2.setGaussBeam(160e-3,10e-3)...
 th = 90*pi/180;
 ph = 0;
 op.setMagneticField(1,[sin(th)*cos(ph),sin(th)*sin(ph),cos(th)]);
-op.initGroundPop = zeros(op.numGroundStates,1);
-op.initGroundPop(3) = 1;
+op.initPop(3) = 1;
 
 tmp = 2*pi*1e2*ones(8,8)*0;
 tmp = tmp - diag(diag(tmp));

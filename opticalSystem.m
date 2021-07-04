@@ -3,11 +3,9 @@ classdef opticalSystem < densityMatrix
     %optical transition in an alkali metal atom.  It's a sub-class of
     %DENSITYMATRIX
     
-    properties
+    properties(SetAccess = protected)
         atom        %The atom to use, an instance of ALKALIATOM
         transition  %The transition to use, an instance of OPTICALTRANSITION
-        ground      %The ground state to consider, an instance of FINESTRUCTURE
-        excited     %The excited state to consider, an instance of FINESTRUCTURE
         
         laser1      %The primary laser field, an instance of LASER
         laser2      %The secondary laser field, an instance of LASER
@@ -37,14 +35,40 @@ classdef opticalSystem < densityMatrix
             %
             % Set the ground and excited states
             %
-            self.ground = self.transition.ground;
-            self.excited = self.transition.excited;
-            self.setNumStates(self.transition.numStates,self.ground.numStates);
+            self.setNumStates(self.transition.numStates);
             %
             % Create blank instances of the primary and secondary lasers
             %
             self.laser1 = laser;
             self.laser2 = laser;
+        end
+
+        function P = getPopulations(self,opt)
+            %GETPOPULATIONS Returns the populations as a function of time
+            %from the solved density matrix equations
+            %
+            %   P = D.GETPOPULATIONS(OPT) Uses OPT to get the populations.
+            %   OPT can be a vector of numbers that corresponds to
+            %   population labels. If can be a character vector that is
+            %   either 'ground', 'excited', or 'all'
+            if nargin == 1 || isempty(opt)
+                P = self.getPopFromVec;
+            elseif isnumeric(opt)
+                pTemp = self.getPopFromVec;
+                P = pTemp(opt(:),:);
+            elseif all(ischar(opt))
+                pTemp = self.getPopFromVec;
+                if strcmpi(opt,'ground')
+                    P = pTemp(1:self.transition.ground.numStates,:);
+                elseif strcmpi(opt,'excited')
+                    P = pTemp((self.transition.ground.numStates+1):end,:);
+                elseif strcmpi(opt,'all')
+                    P = pTemp;
+                else
+                    error('Population option not supported!');
+                end
+            end   
+            P = real(P);
         end
         
         function str = getPopLegend(self,opt)
@@ -63,9 +87,9 @@ classdef opticalSystem < densityMatrix
                 idx = opt;
             elseif all(ischar(opt))
                 if strcmpi(opt,'ground')
-                    idx = 1:self.numGroundStates;
+                    idx = 1:self.transition.ground.numStates;
                 elseif strcmpi(opt,'excited')
-                    idx = (self.numGroundStates+1):self.numStates;
+                    idx = (self.transition.ground.numStates+1):self.numStates;
                 elseif strcmpi(opt,'all')
                     idx = 1:self.numStates;
                 else
@@ -76,7 +100,7 @@ classdef opticalSystem < densityMatrix
             %
             % This creates labels in the |F,mF> basis
             %
-            BV3 = [self.ground.BV3;self.excited.BV3];
+            BV3 = [self.transition.ground.BV3;self.transition.excited.BV3];
             for nn=1:length(idx)
                 str{nn} = sprintf('|%d,%d>',BV3(idx(nn),1),BV3(idx(nn),2));
             end
@@ -166,6 +190,8 @@ classdef opticalSystem < densityMatrix
             %
             %   OP = OP.CALCBAREH(B) Uses the new magnetic field B in Gauss
             
+            ground = self.transition.ground;
+            excited = self.transition.excited;
             if nargin == 2
                 self.B = B;
             end
@@ -188,14 +214,14 @@ classdef opticalSystem < densityMatrix
                 % apply to both states
                 %
                 detuning1 = self.transition.calcNewDetuning(self.laser1);
-                self.bare = 2*pi*1e6*blkdiag(self.ground.E,self.excited.E - detuning1*eye(self.excited.numStates));
+                self.bare = 2*pi*1e6*blkdiag(ground.E,excited.E - detuning1*eye(excited.numStates));
             else                
                 %
                 % Shift the bare Hamiltonian based on the detunings of the
                 % primary and secondary laser
                 %
-                idx = bsxfun(@eq,self.ground.BV3(:,1),self.laser2.ground(1)); %find ground states with same F as laser2 (the repump)
-                g2 = zeros(self.ground.numStates,1);
+                idx = bsxfun(@eq,ground.BV3(:,1),self.laser2.ground(1)); %find ground states with same F as laser2 (the repump)
+                g2 = zeros(ground.numStates,1);
                 detuning1 = self.transition.calcNewDetuning(self.laser1);
                 detuning2 = self.transition.calcNewDetuning(self.laser2);
                 g2(idx) = detuning1 - detuning2;    %This is the two-photon detuning
@@ -205,7 +231,7 @@ classdef opticalSystem < densityMatrix
                 % two-photon detuning, the second part is the excited state
                 % energies shifted by the one-photon detuning
                 %
-                self.bare = 2*pi*1e6*blkdiag(self.ground.E - g2,self.excited.E - detuning1*eye(self.excited.numStates));
+                self.bare = 2*pi*1e6*blkdiag(ground.E - g2,excited.E - detuning1*eye(excited.numStates));
             end
         end
         
@@ -220,8 +246,8 @@ classdef opticalSystem < densityMatrix
             %    stores them as internal properties
             %
             self.transition.makeCoupling;
-            groundU3int = self.ground.U31*self.ground.U1int;
-            excitedU3int = self.excited.U31*self.excited.U1int;
+            groundU3int = self.transition.ground.U31*self.transition.ground.U1int;
+            excitedU3int = self.transition.excited.U31*self.transition.excited.U1int;
             U3int = blkdiag(groundU3int,excitedU3int);
             self.coupling = U3int'*self.getLaserFieldMatrix*U3int;
             self.decay = self.transition.getDecayMatrix(U3int');
@@ -249,9 +275,9 @@ classdef opticalSystem < densityMatrix
             %
             % Loop over all ground and excited states
             %
-            for g = 1:self.numGroundStates
-                for e = 1:self.numExcitedStates
-                    eShift = e + self.numGroundStates;
+            for g = 1:self.transition.ground.numStates
+                for e = 1:self.transition.excited.numStates
+                    eShift = e + self.transition.ground.numStates;
                     q = self.transition.qMatrix(g,eShift);
                     if q ~= 0
                         if isempty(self.laser1.ground) || isempty(self.laser2.intensity) || (self.laser2.intensity == 0)
@@ -269,7 +295,7 @@ classdef opticalSystem < densityMatrix
                             % secondary lasers couple the two ground F
                             % states independently
                             %
-                            fStart = self.ground.BV3(g,1);
+                            fStart = self.transition.ground.BV3(g,1);
                             if fStart == self.laser1.ground(1)
                                 omega(g,eShift) = self.laser1.field*pol1(q).*self.transition.dipole(g,eShift)/const.hbar;
                             elseif fStart == self.laser2.ground(1)
@@ -292,7 +318,7 @@ classdef opticalSystem < densityMatrix
             %
             p = self.getPopulations('excited');
             d = sum(self.decay,1);
-            d = d((self.ground.numStates+1):end);
+            d = d((self.transition.ground.numStates+1):end);
             R = bsxfun(@times,p,d(:));
         end
         
