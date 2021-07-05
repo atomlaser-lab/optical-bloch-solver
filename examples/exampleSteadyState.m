@@ -7,21 +7,23 @@ op = opticalSystem('Rb87','D2');
 op.laser1.setIntensity(1e-2*16)...
     .setPolarization([1,0,0],'linear')...
     .setStates([2,0],[3,0],0);
-op.laser2.setIntensity(1e-2*16)...
-    .setPolarization([1,0,0],'linear')...
+op.laser2.setIntensity(16)...
+    .setPolarization([0,1,0],'linear')...
     .setStates([1,0],[2,0],0);
 
 th = 0;ph = 0;
 op.setMagneticField(1e-3,[sin(th)*cos(ph),sin(th)*sin(ph),cos(th)]);
 
 D = linspace(-1e3,1e3,100);
-Pg = zeros(op.ground.numStates,numel(D));
-Pe = zeros(op.excited.numStates,numel(D));
+Pg = zeros(op.transition.ground.numStates,numel(D));
+Pe = zeros(op.transition.excited.numStates,numel(D));
+susc = zeros(3,numel(D));
 for nn = 1:numel(D)
     op.laser1.detuning = D(nn);
     op.refresh.solveSteadyState;
     Pg(:,nn) = op.getPopulations('ground');
     Pe(:,nn) = op.getPopulations('excited');
+    susc(:,nn) = op.getPolarization('spherical');
 end
 
 %%
@@ -29,5 +31,12 @@ figure(1);clf;
 ax = gca;
 grid on;
 set(gca,'NextPlot','ReplaceChildren','LineStyleOrder',{'-','--','.-'})
-plot(D,Pg);
+plot(ax,D,Pg,'linewidth',1.5);
 legend(op.getPopLegend('ground'));
+
+figure(2);clf;
+plot(D,real(susc),'-','linewidth',2);
+xlabel('Frequency [kHz]');
+ylabel('Absorbance');
+legend('-1','0','+1');
+
