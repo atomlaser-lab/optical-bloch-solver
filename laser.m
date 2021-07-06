@@ -14,7 +14,9 @@ classdef laser < handle
     end
     
     properties(Constant)
-        sphPolBasis = [1 1i 0;0 0 1;-1 1i 0]; %Converts (x,y,z) components to q=(-1,0,1) (spherical) components
+        sphPolBasis = [[1 1i 0]/sqrt(2);
+                       [0 0 1];
+                       [-1 1i 0]/sqrt(2)]; %Converts (x,y,z) components to q=(-1,0,1) (spherical) components
     end
     
     methods
@@ -50,7 +52,7 @@ classdef laser < handle
             %   field assuming a Gaussian beam of total power P and beam
             %   waist W
             self.intensity = 2*P/(pi*w0^2);
-            self.field = self.calcFieldF(self.intensity);
+            self.field = self.calcField(self.intensity);
         end
         
         function self = setPolarization(self,pol,polBasis)
