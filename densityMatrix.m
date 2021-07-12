@@ -119,11 +119,11 @@ classdef densityMatrix < handle
         end
         
         
-        function self = intConstField(self,dt,T)
-            %INTCONSTFIELD Integrates the master equation for a given time
+        function self = integrate(self,dt,T)
+            %INTEGRATE Integrates the master equation for a given time
             %step and for a given total time
             %
-            %   D = D.INTCONSTFIELD(DT,T) Integrates the master equation
+            %   D = D.INTEGRATE(DT,T) Integrates the master equation
             %   for the density matrix as a function of time for a time
             %   step DT and for a total time T
             %

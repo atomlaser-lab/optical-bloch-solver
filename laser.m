@@ -1,15 +1,12 @@
 classdef laser < handle
     %LASER Defines a class that represents a laser beam
-    properties
-        P           %Optical power in W
-        w0          %Beam waist in m^2
-        
+    properties      
         intensity   %Intensity in W/m^2
         field       %Electric field in V/m
         pol         %Polarization as 3-element vector in either spherical [sigma_-,pi,sigma_+] or linear [x,y,z] polarization
         
         ground      %|F,mF> ground state to use as a reference for the detuning
-        excited     %|F',mF'> excited state to use a s a reference for the detuning
+        excited     %|F',mF'> excited state to use as a reference for the detuning
         detuning    %The detuning of the laser from the reference transition
     end
     

@@ -22,7 +22,7 @@ d.decay = [0 0 0;
 % Set the initial state to be all atoms in state 1
 d.initPop(1) = 1;
 % Integrate with a time step of 100 ns to a maximum time of 100 us
-d.intConstField(100e-9,200e-6);
+d.integrate(100e-9,200e-6);
 % Plot populations
 figure(1);clf;
 d.plotPopulations;

@@ -133,9 +133,10 @@ d.decay = [0 0 g;
 % Set the initial state to be all atoms in state 1
 d.initPop(1) = 1;
 % Integrate with a time step of 100 ns to a maximum time of 100 us
-d.intConstField(10e-6,20e-3);
+d.integrate(10e-6,20e-3);
 % Plot populations - expected Rabi frequency is rabip*rabic/deltac^2
 figure(3);clf;
 d.plotPopulations;
+title('Rabi flopping');
 
 
