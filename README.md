@@ -77,7 +77,7 @@ The `laser` class describes the optical field incident on the atoms.  It has pro
   - `pol`: the normalized polarization in the linear basis as $(E_x,E_y,E_z)$.
   - `ground`: the $|F,m_F\rangle$ ground state to use as a reference for the detuning
   - `excited`: the $F,m_F\rangle$ excited state to use as a reference for the detuning
-  - `detuning`: the detuning in MHz.
+  - `detuning`: the detuning in Hz.
 
 First, let's discuss the laser intensity and electric field.  The user should set the intensity using the `setIntensity(I)` method where the input argument `I` is the intensity.  When set this way, the electric field is automatically calculated.  Otherwise, the user can set the electric field directly.  A useful alternative is to use `setGaussbeam(P,w)` where `P` is the total optical power in W and `w` is the beam waist ($I = I_0\exp(-2r^2/w^2)$) in meters.  This calculates the peak intensity as $I = 2P/\pi w^2$ and sets the intensity and field based on the result.
 
@@ -85,8 +85,8 @@ The user should set the polarization using the method `setPolarization(pol,basis
 
 The final properties `ground`, `excited`, and `detuning` are more complicated.  Basically, in many calculations one wants to solve for time-dependent problems with a detuning relative to a particular transition.  However, one does not want to have to keep track of what the absolute frequency is if a magnetic field changes.  The properties `ground` and `excited` let the user fix what states the detuning should be calculated relative to.  Both `ground` and `excited` can be specified either as just the $F$ value or as a 2 element vector $|F,m_F\rangle$.  In `opticalSystem`, `laser` must have a ground state value set so that the solver knows how to calculate the rotating wave approximation; however, `ground` can be just an $F$ value.  If just an $F$ value is set, then the detuning is calculated with respect to the $B=0$ energy for the ground state and the fine structure frequency of the excited state.  If `ground` or `excited` is set to a 2 element vector, the detuning is calculated with respect to the relevant transition connecting the $|F,m_F\rangle\rightarrow |F\rangle$ or $|F,m_F\rangle\rightarrow|F',m_F'\rangle$ states.  Here are a couple of examples:
 ```
-op.laser1.setStates(2,[],0);            %Laser 1 connects ground state with F = 2, and is detuned by 0 MHz from the F = 2 to F' transition
-op.laser1.setStates([1,1],2,-1e3);      %Laser 1 connects the state |1,1> with the F' = 2 state with a detuning of -1 GHz. If the magnetic field is changed, the detuning relative to this transition is unchanged.
+op.laser1.setStates(2,[],0);            %Laser 1 connects ground state with F = 2, and is detuned by 0 Hz from the F = 2 to F' transition
+op.laser1.setStates([1,1],2,-1e9);      %Laser 1 connects the state |1,1> with the F' = 2 state with a detuning of -1 GHz. If the magnetic field is changed, the detuning relative to this transition is unchanged.
 op.laser1.setStates([2,2],[3,3],0);     %Laser 1 connects the |2,2> -> |3,3> transition. Remains on resonance regardless of magnetic field
 ```
 

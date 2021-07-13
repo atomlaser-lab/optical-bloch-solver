@@ -9,10 +9,10 @@
 op = opticalSystem('Rb87','D2');
 op.laser1.setGaussBeam(50e-3,10e-3)...
     .setPolarization([0,0,1],'spherical')...
-    .setStates([2,0],[2,0],-2e3);
+    .setStates([2,0],[2,0],-2e9);
 op.laser2.setGaussBeam(50e-3,10e-3)...
     .setPolarization([0,0,1],'spherical')...
-    .setStates([1,0],[2,0],-2e3); %Note the AC Stark shift
+    .setStates([1,0],[2,0],-2e9); %Note the AC Stark shift
 
 th = 0*pi/180;
 ph = 0;
@@ -25,7 +25,7 @@ op.decay(1:8,1:8) = tmp;
 
 
 %% Solve for each detuning
-f2 = (-1000:20:1000)*1e-3;
+f2 = (-1000:20:1000)*1e3;
 tau = 8e-6;
 P = zeros(op.transition.ground.numStates,numel(f2));
 for nn = 1:numel(f2)
@@ -40,14 +40,14 @@ figure(1);clf;
 ax = gca;
 grid on;
 set(ax,'NextPlot','ReplaceChildren','LineStyleOrder',{'-','--','.-'})
-plot(ax,f2*1e3,P,'linewidth',0.5,'marker','.');
+plot(ax,f2/1e3,P,'linewidth',0.5,'marker','.');
 str = op.getPopLegend('ground');
 legend(ax,str);
 xlabel('Frequency [kHz]');
 ylabel('Population');
 
 %% Fit
-nlf = nonlinfit(f2,P(2,:));
+nlf = nonlinfit(f2/1e6,P(2,:));
 nlf.useErr = false;
 nlf.setFitFunc(@(A,R,x0,x) A*(1 - 4*R.^2./(4*R.^2+(x-x0).^2).*sin(sqrt(4*R.^2+(x-x0).^2)*2*pi*tau*1e6/2).^2));
 nlf.bounds([0,0,-5],[1,10,5],[0.95,0.025,0]);

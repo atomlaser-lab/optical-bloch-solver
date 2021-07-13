@@ -2,7 +2,6 @@ classdef fineStructure < handle
     %FINESTRUCTURE Defines a class that represents the fine structure and
     %hyperfine structure of a state in an alkali metal atom
     properties
-        species         %The species of atom
         numStates       %The total number of states
         
         L               %The orbital angular momentum
@@ -28,7 +27,7 @@ classdef fineStructure < handle
     end
 
     methods
-        function self = fineStructure(species,L,J)
+        function self = fineStructure(L,J,I,gI,A1,A2)
             %FINESTRUCTURE Creates an object of class FINESTRUCTURE
             %
             %   FS = FINESTRUCTURE(SPECIES,L,J) creates a FINESTRUCTURE
@@ -37,31 +36,10 @@ classdef fineStructure < handle
             %   SPECIES can be one of 'Rb87', 'K40', or 'K41'.
             self.L = L;
             self.J = J;
-            if strcmpi(species,'Rb87')
-                self.species = 'Rb87';
-                self.I = 3/2;
-                self.gI = -0.0009951414;
-            elseif strcmpi(species,'K40')
-                self.species = 'K40';
-                self.I = 4;
-                self.gI = 0.000176490;
-            elseif strcmpi(species,'K41')
-                self.species = 'K41';
-                self.I = 3/2;
-                self.gI = 0.000176490;
-            end
-            
-            if self.L == 0
-                %
-                % L = 0 is a ground state
-                %
-                self.setGroundState;
-            else
-                %
-                % L ~= 0 is an excited stae
-                %
-                self.setExcitedState;
-            end
+            self.I = I;
+            self.gI = gI;
+            self.A1 = A1;
+            self.A2 = A2;
             %
             % Calculate the Lande g-factor and the number of states
             %
@@ -241,52 +219,6 @@ classdef fineStructure < handle
         
     end
 
-    methods(Access = protected)
-        function self = setGroundState(self)
-            %SETGROUNDSTATE Sets properties correctly for a ground state
-            % (L = 0).
-            %
-            %   FS = FS.SETGROUNDSTATE() Sets the ground state properties
-            self.A2 = 0;
-            if strcmpi(self.species,'Rb87')
-                self.A1 = 6834.682610904/(self.I+self.S);
-            elseif strcmpi(self.species,'K40')
-                self.A1 = -285.7308;
-            elseif strcmpi(self.species,'K41')
-                self.A1 = 254.013872/(self.I+self.S);
-            end
-        end
-        
-        function self = setExcitedState(self)
-            %SETEXCITEDSTATE Sets properties correctly for an excited state
-            % (L = 0).
-            %
-            %   FS = FS.SETEXCITEDSTATE() Sets the excited state properties
-            if self.J == 0.5
-                self.A2 = 0;
-                if strcmpi(self.species,'Rb87')
-                    self.A1 = 6834.682610904/(self.I+self.S);
-                elseif strcmpi(self.species,'K40')
-                    self.A1 = -285.7308;
-                elseif strcmpi(self.species,'K41')
-                    self.A1 = 254.013872/(self.I+self.S);
-                end
-            elseif self.J == 1.5
-                if strcmpi(self.species,'Rb87')
-                    self.A1 = 84.7185;
-                    self.A2 = 12.4965;
-                elseif strcmpi(self.species,'K40')
-                    self.A1 = -7.585;
-                    self.A2 = -3.445;
-                elseif strcmpi(self.species,'K41')
-                    self.A1 = 3.363;
-                    self.A2 = 3.351;
-                end
-            end
-        end
-    end
-
-    
     methods(Static)
         function gJ = calcLandeJ(S,L,J)
             %CALCLANDEJ Calculates the Lande g-factor for a J state

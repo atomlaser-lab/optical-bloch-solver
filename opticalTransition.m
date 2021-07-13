@@ -173,7 +173,7 @@ classdef opticalTransition < handle
             %
             U3int = blkdiag(self.ground.U3int,self.excited.U3int);
             D = U3int'*self.coupling*U3int;
-            G = self.getDecayMatrix(U3int')/(2*pi*1e6);
+            G = self.getDecayMatrix(U3int')/(2*pi);
             self.transInfo = transitionInformation;
             transCount = 1;
             %
@@ -257,7 +257,7 @@ classdef opticalTransition < handle
                     % Generate frequency vectors
                     %
                     fCenter = min(self.transInfo(nn).freq);
-                    f = fCenter+linspace(-50,+50,1e3)';
+                    f = fCenter+linspace(-50e6,+50e6,1e3)';
                     fMin = min(fMin,min(f));
                     fMax = max(fMax,max(f));
                     %

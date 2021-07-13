@@ -9,7 +9,7 @@ op = opticalSystem('Rb87','D2');                %Sets the optical system to be f
 %
 op.laser1.setGaussBeam(1.6e-6,90e-6)...         %Sets the intensity for a Gaussian beam of 1.6 uW power and 90 um waist
     .setPolarization([1,0,0],'linear')...       %Sets the polarization in the linear basis
-    .setStates([2,2],[3,0],-2.5e3);             %Sets the states that the laser addresses. 
+    .setStates([2,2],[3,0],-3e9);             %Sets the states that the laser addresses. 
 %
 % Set magnetic field properties. Angles are relative to the direction of
 % the laser field (assumed to be in the positive z direction). So th = 0

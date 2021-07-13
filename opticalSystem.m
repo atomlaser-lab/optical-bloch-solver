@@ -24,7 +24,21 @@ classdef opticalSystem < densityMatrix
             %   transition 'D1' or 'D2'
             
             self = self@densityMatrix;  %This syntax is necessary for sub-classes
-            self.atom = alkaliAtom(species);
+            switch lower(species)
+                case 'rb87'
+                    self.atom = Rb87Atom;
+                case 'rb85'
+                    self.atom = Rb85Atom;
+                case 'k39'
+                    self.atom = K39Atom;
+                case 'k40'
+                    self.atom = K40Atom;
+                case 'k41'
+                    self.atom = K41Atom;
+                otherwise
+                    error('Unsupported species ''%s''',species);
+            end
+
             if strcmpi(transition,'D1')
                 self.transition = self.atom.D1;
             elseif strcmpi(transition,'D2')
@@ -214,7 +228,7 @@ classdef opticalSystem < densityMatrix
                 % apply to both states
                 %
                 detuning1 = self.transition.calcNewDetuning(self.laser1);
-                self.bare = 2*pi*1e6*blkdiag(ground.E,excited.E - detuning1*eye(excited.numStates));
+                self.bare = 2*pi*blkdiag(ground.E,excited.E - detuning1*eye(excited.numStates));
             else                
                 %
                 % Shift the bare Hamiltonian based on the detunings of the
@@ -231,7 +245,7 @@ classdef opticalSystem < densityMatrix
                 % two-photon detuning, the second part is the excited state
                 % energies shifted by the one-photon detuning
                 %
-                self.bare = 2*pi*1e6*blkdiag(ground.E - g2,excited.E - detuning1*eye(excited.numStates));
+                self.bare = 2*pi*blkdiag(ground.E - g2,excited.E - detuning1*eye(excited.numStates));
             end
         end
         

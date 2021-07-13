@@ -13,32 +13,15 @@ classdef alkaliAtom < handle
     end
 
     methods
-        function self = alkaliAtom(species)
+        function self = alkaliAtom
             %ALKALIATOM Creates an instance of the object corresponding to
             %the species given at the input
             %
             %   ATOM = ALKALIATOM(SPECIES) creates an instance using
-            %   SPECIES as the atom type.  Currently supports only 'Rb87',
-            %   'K40', and 'K41'
+            %   SPECIES as the atom type.  Currently supports only all Rb
+            %   and K isotopes
             %
-            self.ground = fineStructure(species,0,0.5);
-            self.excited1 = fineStructure(species,1,0.5);
-            self.excited2 = fineStructure(species,1,1.5);
-            if strcmpi(species,'Rb87')
-                self.species = 'Rb87';
-                self.D1 = opticalTransition(self.ground,self.excited1,795e-9,2*pi*6.065e6);
-                self.D2 = opticalTransition(self.ground,self.excited2,780.241e-9,2*pi*6.065e6);
-            elseif strcmpi(species,'K40')
-                self.species = 'K40';
-                self.D1 = opticalTransition(self.ground,self.excited1,770e-9,2*pi*6.035e6);
-                self.D2 = opticalTransition(self.ground,self.excited2,766.7e-9,2*pi*6.035e6);
-            elseif strcmpi(species,'K41')
-                self.species = 'K41';
-                self.D1 = opticalTransition(self.ground,self.excited1,770e-9,2*pi*6.035e6);
-                self.D2 = opticalTransition(self.ground,self.excited2,766.7e-9,2*pi*6.035e6);
-            else
-                error('Unsupported species');
-            end
+
         end
         
         function self = setMagneticField(self,B)

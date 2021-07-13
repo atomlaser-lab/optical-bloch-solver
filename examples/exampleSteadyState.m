@@ -14,7 +14,7 @@ op.laser2.setIntensity(16)...
 th = 0;ph = 0;
 op.setMagneticField(1e-3,[sin(th)*cos(ph),sin(th)*sin(ph),cos(th)]);
 
-D = linspace(-1e3,1e3,100);
+D = linspace(-1e9,1e9,100);
 Pg = zeros(op.transition.ground.numStates,numel(D));
 Pe = zeros(op.transition.excited.numStates,numel(D));
 susc = zeros(3,numel(D));
@@ -31,12 +31,14 @@ figure(1);clf;
 ax = gca;
 grid on;
 set(gca,'NextPlot','ReplaceChildren','LineStyleOrder',{'-','--','.-'})
-plot(ax,D,Pg,'linewidth',1.5);
+plot(ax,D/1e6,Pg,'linewidth',1.5);
 legend(op.getPopLegend('ground'));
+xlabel('Frequency [MHz]');
+ylabel('Population');
 
 figure(2);clf;
-plot(D,real(susc),'-','linewidth',2);
-xlabel('Frequency [kHz]');
+plot(D/1e6,real(susc),'-','linewidth',2);
+xlabel('Frequency [MHz]');
 ylabel('Absorbance');
 legend('-1','0','+1');
 
