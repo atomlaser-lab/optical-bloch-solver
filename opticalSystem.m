@@ -260,8 +260,8 @@ classdef opticalSystem < densityMatrix
             %    stores them as internal properties
             %
             self.transition.makeCoupling;
-            groundU3int = self.transition.ground.U31*self.transition.ground.U1int;
-            excitedU3int = self.transition.excited.U31*self.transition.excited.U1int;
+            groundU3int = self.transition.ground.U3int;
+            excitedU3int = self.transition.excited.U3int;
             U3int = blkdiag(groundU3int,excitedU3int);
             self.coupling = U3int'*self.getLaserFieldMatrix*U3int;
             self.decay = self.transition.getDecayMatrix(U3int');
@@ -365,9 +365,12 @@ classdef opticalSystem < densityMatrix
                 frame = 'lab';
             end
             %
-            % Get rotation from lab frame to magnetic field frame
+            % Get rotation from lab frame to magnetic field frame, and
+            % rotation from internal basis (where the density matrix is
+            % calculated) to the |F,mF> basis
             %
             Upol = self.getRotation;
+            U3int = blkdiag(self.transition.ground.U3int,self.transition.excited.U3int);
             %
             % Preallocate variables, reshape density matrix
             %
@@ -377,7 +380,7 @@ classdef opticalSystem < densityMatrix
                 %
                 % Calculate individual dipole polarizations
                 %
-                tmp = self.transition.dipole.*D(:,:,nn);
+                tmp = self.transition.dipole.*(U3int*D(:,:,nn)*U3int');
                 %
                 % Calculate contributions to each polarization vector using
                 % a mask

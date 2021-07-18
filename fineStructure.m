@@ -174,11 +174,11 @@ classdef fineStructure < handle
             %the energies and eigenvectors
             %
             %   E = FS.SOLVEHYPERFINE(B) Solves the Hamiltonian for a given
-            %   magnetic field B (in Gauss) for energies in E in MHz. Is a
+            %   magnetic field B (in Gauss) for energies in E in Hz. Is a
             %   vector of energies ordered from lowest to highest
             %
             %   {E,U1int] = FS.SOLVEHYPERFINE(B) Generates a diagonal
-            %   matrix of energies E in MHz and a transformation unitary
+            %   matrix of energies E in Hz and a transformation unitary
             %   U1int which takes vectors in the basis that solves the
             %   hyperfine + Zeeman Hamiltonian and transforms them to the
             %   uncoupled basis |mJ,mI>
@@ -203,14 +203,14 @@ classdef fineStructure < handle
                 %
                 % With a field it is not diagonal in either basis
                 %
-                HB = diag(const.muBh*B*(self.gJ*self.BV1(:,1)+self.gI*self.BV1(:,2)));
+                HB = diag(const.muB*1e-4/const.h*B*(self.gJ*self.BV1(:,1)+self.gI*self.BV1(:,2)));
                 H2 = self.H0+HB;
                 [U1int,E] = eig(H2);  
             end
             
-            self.E=E;
-            self.U1int=U1int;
-            self.U3int=self.U31*self.U1int;
+            self.E = E;
+            self.U1int = U1int;
+            self.U3int = self.U31*self.U1int;
             if nargout <= 1
                 E = diag(E);
             end
