@@ -391,13 +391,15 @@ classdef opticalSystem < densityMatrix
                     P(qq,nn) = 1i*2*pi/(2*self.transition.wavelength*const.eps0)*sum(tmp2(:));
                 end
                 %
-                % Perform rotations to necessary bases or frames
+                % Perform rotations to necessary bases or frames. P is in
+                % the spherical basis in the frame parallel with the
+                % magnetic field
                 %
                 if strcmpi(frame,'lab')
                     if strcmpi(basis,'spherical')
-                        P(:,nn) = Upol'*P(:,nn);
+                        P(:,nn) = laser.sphPolBasis*Upol'*laser.sphPolBasis'*P(:,nn);
                     elseif strcmpi(basis,'linear')
-                        P(:,nn) = laser.sphPolBasis'*Upol'*P(:,nn);
+                        P(:,nn) = Upol'*laser.sphPolBasis'*P(:,nn);
                     else
                         error('Basis ''%s'' must be either ''spherical'' or ''linear''!',basis)
                     end
