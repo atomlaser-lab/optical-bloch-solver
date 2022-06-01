@@ -216,6 +216,30 @@ classdef fineStructure < handle
             end
         end
         
+        function [Eout,idx] = getE(self,F,mF)
+            %GETE Returns the energy associated with a given |F,mF> state
+            %
+            %   Eout = GETE(F,mF) returns the energy associated with state
+            %   labelled by |F,mF>.  Since F and mF are only good quantum
+            %   numbers for low magnetic fields, the state with the
+            %   greatest overlap with the |F,mF> eigenstate is chosen as
+            %   "the" |F,mF> state for which the energy is returned.
+            
+            if nargin < 3 && numel(F) == 2
+                mF = F(2);
+                F = F(1);
+            elseif nargin < 3 && numel(F) == 1
+                if any(self.BV3(:,2) == 0)
+                    mF = 0;
+                else
+                    mF = 0.5;
+                end
+            end
+            state = [F,mF];
+            [~,idx] = max(self.U3int(all(self.BV3 == state,2),:).^2);
+            Eout = self.E(idx,idx);
+        end
+        
         
     end
 
