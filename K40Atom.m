@@ -18,5 +18,24 @@ classdef K40Atom < alkaliAtom
         end
     end
     
-    
+    methods(Static)
+        function f = freq(transition,initState,finalState,B)
+            %FREQ Computes the absolute frequency of a transition
+            %
+            %   F = FREQ(TRANSITION,INITSTATE,FINALSTATE) returns
+            %   absolute frequency FREQ given [F,mF] states INITSTATE and
+            %   FINALSTATE for TRANSITION (either 'D1' or 'D2')
+            %
+            %   F = FREQ(__,B) calculates the absolute
+            %   frequency in magnetic field B
+            
+            a = K40Atom;
+            if nargin < 4
+                f = a.(transition).absoluteFreq(initState,finalState);
+            else
+                f = a.(transition).absoluteFreq(initState,finalState,B);
+            end
+        end
+    end
+
 end

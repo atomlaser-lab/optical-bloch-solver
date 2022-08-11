@@ -1,4 +1,4 @@
-classdef alkaliAtom < handle
+classdef (Abstract) alkaliAtom < handle
     %ALKALIATOM Defines a class that represents the optical transitions
     %within an alkali metal atom
     
@@ -13,16 +13,16 @@ classdef alkaliAtom < handle
     end
 
     methods
-        function self = alkaliAtom
-            %ALKALIATOM Creates an instance of the object corresponding to
-            %the species given at the input
-            %
-            %   ATOM = ALKALIATOM(SPECIES) creates an instance using
-            %   SPECIES as the atom type.  Currently supports only all Rb
-            %   and K isotopes
-            %
-
-        end
+%         function self = alkaliAtom
+%             %ALKALIATOM Creates an instance of the object corresponding to
+%             %the species given at the input
+%             %
+%             %   ATOM = ALKALIATOM(SPECIES) creates an instance using
+%             %   SPECIES as the atom type.  Currently supports only all Rb
+%             %   and K isotopes
+%             %
+% 
+%         end
         
         function self = setMagneticField(self,B)
             %SETMAGNETICFIELD Sets the magnetic field and solves for the
@@ -35,6 +35,10 @@ classdef alkaliAtom < handle
             self.excited2.solveHyperfine(B);
         end
 
+    end
+
+    methods(Static,Abstract)
+        freq = freq(transition,initState,finalState,B)
     end
 
 end

@@ -276,7 +276,29 @@ classdef opticalTransition < handle
             hold off;
             xlim([fMin,fMax]);
         end
-        
+
+        function freq = absoluteFreq(self,initState,finalState,B)
+            %ABSOLUTEFREQ Returns the absolute frequency of a transition
+            %between two states
+            %
+            %   FREQ = SELF.ABSOLUTEFREQ(INITSTATE,FINALSTATE) returns
+            %   absolute frequency FREQ given [F,mF] states INITSTATE and
+            %   FINALSTATE
+            %
+            %   FREQ = SELF.ABSOLUTEFREQ(__,B) calculates the absolute
+            %   frequency in magnetic field B
+            if nargin >= 4
+                self.setMagneticField(B);
+            end
+            if numel(initState) == 1
+                initState(2) = 0;
+            end
+            if numel(finalState) == 1
+                finalState(2) = 0;
+            end
+            freq = const.c/self.wavelength - self.ground.getE(initState(1),initState(2))...
+                   + self.excited.getE(finalState(1),finalState(2));
+        end
     end
     
 end
