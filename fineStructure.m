@@ -13,6 +13,7 @@ classdef fineStructure < handle
         A1              %The magnetic dipole constant in MHz
         A2              %The electric quadrupole constant in MHz
         
+        hfs             %The hyperfine splittings at zero field
         E               %The state energies
         H0              %The bare Hamiltonian in the uncoupled basis |mJ,mI>
         U1int           %The transformation unitary from the "internal" basis with magnetic field to the uncoupled basis
@@ -51,6 +52,17 @@ classdef fineStructure < handle
             % correctly
             %
             self.solveHyperfine(0);
+            self.calcHyperfineSplittings;
+        end
+
+        function self = calcHyperfineSplittings(self)
+            F = abs(self.J - self.I):(self.J + self.I);
+            K = F.*(F + 1) - self.I*(self.I + 1) - self.J*(self.J + 1);
+            Ehfs = 0.5*self.A1*K;
+            if self.A2 ~= 0 && self.J ~= 0.5
+                Ehfs = Ehfs + self.A2.*(1.5*K.*(K + 1) - 2*self.I*(self.I + 1).*self.J*(self.J + 1))/(2*self.I*(2*self.I - 1)*2*self.J*(2*self.J - 1));
+            end
+            self.hfs = diff(Ehfs);
         end
         
         function self = makeH0(self)

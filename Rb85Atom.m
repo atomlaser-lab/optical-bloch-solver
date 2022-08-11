@@ -14,7 +14,7 @@ classdef Rb85Atom < alkaliAtom
             self.excited2 = fineStructure(1,1.5,I,gI,25.002e6,25.790e6);
             
             self.D1 = opticalTransition(self.ground,self.excited1,794.7666414e-9,2*pi*5.75e6);
-            self.D2 = opticalTransition(self.ground,self.excited2,780.0328595e-9,2*pi*6.0666e6);
+            self.D2 = opticalTransition(self.ground,self.excited2,780.241368271e-9,2*pi*6.0666e6);
         end
     end
     

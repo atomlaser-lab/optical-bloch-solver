@@ -37,6 +37,7 @@ classdef opticalTransition < handle
             self.totalDecay = decay;
             self.numStates = self.ground.numStates+self.excited.numStates;
             self.crossSection = 3*self.wavelength^2./(2*pi);
+            self.makeCoupling;
         end
         
         function self = setMagneticField(self,B)
