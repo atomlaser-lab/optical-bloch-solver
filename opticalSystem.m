@@ -321,6 +321,60 @@ classdef opticalSystem < densityMatrix
             end
            omega = omega + omega';
         end
+
+        function R = getOffResonantPumping(self,laser_in)
+            laser_new = laser_in.copy;
+            omega = zeros(self.numStates);    %omega=d.E/hbar
+            %
+            % Rotate polarizations into basis where B is along z, convert
+            % to spherical polarization
+            %
+            Upol = self.getRotation;
+            pol1 = Upol*laser_in.pol;
+            pol1 = laser.sphPolBasis*pol1;
+            %
+            % Loop over all ground and excited states to compute
+            % \Omega_{ge}
+            %
+            for g = 1:self.transition.ground.numStates
+                for e = 1:self.transition.excited.numStates
+                    eShift = e + self.transition.ground.numStates;
+                    q = self.transition.qMatrix(g,eShift);
+                    if q ~= 0
+                        %
+                        % This selects the ground state manifold that is
+                        % weakly coupled by the laser
+                        %
+                        fStart = self.transition.ground.BV3(g,1);
+                        if fStart ~= laser_new.ground(1)
+                            omega(g,eShift) = laser_new.field*pol1(q).*self.transition.dipole(g,eShift)/const.hbar;
+                        end
+                    end
+                end
+            end
+            %
+            % Compute scattering rates based on \Omega, single-photon
+            % detunings, and decay rates
+            %
+            R = zeros(self.numStates);
+            if laser_in.ground(1) == self.transition.ground.BV3(1,1)
+                laser_new.detuning = laser_new.detuning + self.transition.ground.hfs;
+                laser_new.ground(1) = self.transition.ground.BV3(end,1);
+            else
+                laser_new.detuning = laser_new.detuning - self.transition.ground.hfs;
+                laser_new.ground(1) = self.transition.ground.BV3(1,1);
+            end
+            ground = self.transition.ground;
+            excited = self.transition.excited;
+            detuning1 = self.transition.calcNewDetuning(laser_new);
+            detuning_matrix = 2*pi*blkdiag(ground.E,excited.E - detuning1*eye(excited.numStates));
+            for g = 1:ground.numStates
+                for e = 1:excited.numStates
+                    eShift = e + ground.numStates;
+                    R(eShift,g) = abs(omega(g,eShift)).^2*self.decay(eShift,g)./((detuning_matrix(eShift,eShift) - detuning_matrix(g,g))^2 + self.decay(g,eShift)^2/4 + 2*abs(omega(g,eShift))^2);
+                end
+            end
+        end
        
         function R = getScatteringRates(self)
             %GETSCATTERINGRATES Returns the scattering rates assuming that

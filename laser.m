@@ -31,6 +31,19 @@ classdef laser < handle
                 self.setGaussBeam(P,w0);
             end
         end
+
+        function new_laser = copy(self)
+            %COPY Copies the laser object into a new object
+
+            new_laser = laser;
+            p = properties(self);
+            for nn = 1:numel(p)
+                try
+                    new_laser.(p{nn}) = self.(p{nn});
+                catch
+                end
+            end
+        end
         
         function self = setIntensity(self,I)
             %SETINTENSITY Sets the intensity of the laser field

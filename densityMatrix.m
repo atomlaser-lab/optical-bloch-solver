@@ -222,28 +222,34 @@ classdef densityMatrix < handle
             self.lindblad = L;
         end
         
-        function L = makeLindblad(self,g,e)
+        function L = makeLindblad(self,g,e,decay_in)
             %MAKELINDBLAD Creates the Lindblad term for a pair of ground
             %and excited states
             %
             %   L = D.MAKELINDBLAD(G,E) Creates the Lindblad term for decay
             %   from state E to state G
             %
+            %   L = D.MAKELINDBLAD(G,E,DECAY_IN) Creates the Lindblad term
+            %   using the supplied decay matrix
+            %
+            if nargin < 4
+                decay_in = self.decay;
+            end
             L = zeros(self.numStates^2);
             for n = 1:self.numStates
                 for m = 1:self.numStates
                     row = m + (n-1)*self.numStates;
                     if (n == g) && (m == g)
                         col = e + (e-1)*self.numStates;
-                        L(row,col) = L(row,col) + self.decay(g,e);
+                        L(row,col) = L(row,col) + decay_in(g,e);
                     end       
                     if n == e
                         col = m + (e-1)*self.numStates;
-                        L(row,col) = L(row,col) - 0.5*self.decay(g,e);
+                        L(row,col) = L(row,col) - 0.5*decay_in(g,e);
                     end        
                     if m == e
                         col = e+(n-1)*self.numStates;
-                        L(row,col) = L(row,col) - 0.5*self.decay(g,e);
+                        L(row,col) = L(row,col) - 0.5*decay_in(g,e);
                     end        
                 end
             end
